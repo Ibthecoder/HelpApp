@@ -3,6 +3,7 @@ import { loginUser } from "@/services/auth.service";
 import { generateToken } from "@/lib/jwt";
 import { loginSchema, LoginSchema } from "@/schemas/auth.schema";
 import { withValidation } from "@/middlewares/validate";
+import { ZodError } from "zod"; // Import ZodError
 
 //Handles the POST /api/login endpoint for user authenticatio:.:
 //If successful, it generates and returns a JWT:.:
@@ -17,7 +18,7 @@ const handler = async (
 
   try {
     // Call the service to handle the login logic (finding user and comparing passwords)::.
-    const user = await loginUser(validatedData);
+    const user = await loginUser(validatedData); // Use validatedData
 
     // If authentication is successful, generate a JWT using the user's data::.
     const token = generateToken({
@@ -39,6 +40,18 @@ const handler = async (
       },
     });
   } catch (error: unknown) {
+    // Handle Zod validation errors for email or password
+    if (error instanceof ZodError) {
+      const emailOrPasswordIssue = error.issues.some(
+        (issue) => issue.path[0] === "email" || issue.path[0] === "password"
+      );
+      if (emailOrPasswordIssue) {
+        return res.status(401).json({ message: "Incorrect email or password." });
+      }
+      // For other validation errors (e.g., unexpected fields), return a generic bad request
+      return res.status(400).json({ message: "Validation failed.", errors: error.errors });
+    }
+
     // Handle authentication errors from the service layer::.
     if (error instanceof Error && error.message.includes("Invalid email or password")) {
       return res.status(401).json({ message: error.message });
