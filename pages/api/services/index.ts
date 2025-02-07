@@ -4,6 +4,7 @@ import { withAuth } from "@/middlewares/auth";
 import { withValidation } from "@/middlewares/validate";
 import { createServiceTypeSchema, CreateServiceTypeSchema } from "@/schemas/service.schema";
 import { Role } from "@prisma/client";
+import { withCORS } from "@/middlewares/cors"; // Import withCORS
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   if (req.method === "GET") {
@@ -56,4 +57,4 @@ function servicesApiHandler(req: NextApiRequest, res: NextApiResponse) { // Chan
   }
 }
 
-export default servicesApiHandler; // Export the named function
+export default withCORS(servicesApiHandler); // Wrap with withCORS

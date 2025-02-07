@@ -60,7 +60,7 @@ All API endpoints are documented using OpenAPI (Swagger).
 
 ## Hosted Swagger Documentation
 
-[Link to your hosted Swagger UI here] (Please deploy the application and update this link)
+https://help-app-henna.vercel.app/
 
 ## Assumptions and Shortcuts Made
 

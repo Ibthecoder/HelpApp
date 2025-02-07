@@ -4,6 +4,7 @@ import { withValidation } from "@/middlewares/validate";
 import { updateBookingStatusSchema, UpdateBookingStatusSchema } from "@/schemas/booking.schema";
 import { updateBookingStatus } from "@/services/booking.service";
 import { Role } from "@prisma/client";
+import { withCORS } from "@/middlewares/cors"; // Import withCORS
 
 const handler = async (
   req: AuthenticatedRequest,
@@ -39,7 +40,7 @@ const handler = async (
   }
 };
 
-export default withAuth(
+export default withCORS(withAuth(
   withValidation(updateBookingStatusSchema, handler),
   Role.PROVIDER
-);
+)); // Wrap with withCORS

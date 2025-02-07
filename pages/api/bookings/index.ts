@@ -4,6 +4,7 @@ import { withValidation } from "@/middlewares/validate";
 import { createBookingSchema, CreateBookingSchema } from "@/schemas/booking.schema";
 import { createBooking, getBookingsForUser } from "@/services/booking.service";
 import { Role } from "@prisma/client";
+import { withCORS } from "@/middlewares/cors"; // Import withCORS
 
 const handler = async (req: AuthenticatedRequest, res: NextApiResponse) => {
   if (req.method === "POST") {
@@ -61,4 +62,4 @@ function bookingsApiHandler(req: NextApiRequest, res: NextApiResponse) {
   }
 }
 
-export default bookingsApiHandler; // Export the named function
+export default withCORS(bookingsApiHandler); // Wrap with withCORS

@@ -1,6 +1,7 @@
 import { NextApiResponse } from "next";
 import { withAuth, AuthenticatedRequest } from "@/middlewares/auth";
 import prisma from "@/lib/prisma";
+import { withCORS } from "@/middlewares/cors"; // Import withCORS
 
 //This is a protected route that requires a valid JWT in the Authorization header::
 //It verifies the token, finds the user in the database, and returns their profile::.
@@ -46,4 +47,4 @@ const handler = async (req: AuthenticatedRequest, res: NextApiResponse) => {
   }
 };
 
-export default withAuth(handler);
+export default withCORS(withAuth(handler)); // Wrap with withCORS

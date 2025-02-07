@@ -3,6 +3,7 @@ import { signupSchema, SignupSchema } from "@/schemas/auth.schema";
 import { signupUser } from "@/services/auth.service";
 import { withValidation } from "@/middlewares/validate";
 import { generateToken } from "@/lib/jwt";
+import { withCORS } from "@/middlewares/cors"; // Import withCORS
 
 // Handles the POST /api/signup endpoint for user registration.
 const handler = async (
@@ -48,4 +49,4 @@ const handler = async (
   }
 };
 
-export default withValidation(signupSchema, handler);
+export default withCORS(withValidation(signupSchema, handler)); // Wrap with withCORS

@@ -4,6 +4,7 @@ import { withValidation } from "@/middlewares/validate";
 import { createReviewSchema, CreateReviewSchema } from "@/schemas/review.schema";
 import { createReview } from "@/services/review.service";
 import { Role } from "@prisma/client";
+import { withCORS } from "@/middlewares/cors"; // Import withCORS
 
 const handler = async (
   req: AuthenticatedRequest,
@@ -30,7 +31,7 @@ const handler = async (
   }
 };
 
-export default withAuth(
+export default withCORS(withAuth(
   withValidation(createReviewSchema, handler),
   Role.CLIENT
-);
+)); // Wrap with withCORS

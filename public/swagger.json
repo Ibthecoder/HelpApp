@@ -7,8 +7,8 @@
   },
   "servers": [
     {
-      "url": "http://localhost:3000",
-      "description": "Development server"
+      "url": "https://help-app-henna.vercel.app/",
+    "description": "Production server"
     }
   ],
   "tags": [

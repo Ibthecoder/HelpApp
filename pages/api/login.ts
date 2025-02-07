@@ -3,7 +3,8 @@ import { loginUser } from "@/services/auth.service";
 import { generateToken } from "@/lib/jwt";
 import { loginSchema, LoginSchema } from "@/schemas/auth.schema";
 import { withValidation } from "@/middlewares/validate";
-import { ZodError } from "zod"; // Import ZodError
+import { ZodError } from "zod";
+import { withCORS } from "@/middlewares/cors"; // Import withCORS
 
 //Handles the POST /api/login endpoint for user authenticatio:.:
 //If successful, it generates and returns a JWT:.:
@@ -48,7 +49,7 @@ const handler = async (
       if (emailOrPasswordIssue) {
         return res.status(401).json({ message: "Incorrect email or password." });
       }
-      // For other validation errors (e.g., unexpected fields), return a generic bad request
+      // For other validation errors, return a generic bad request
       return res.status(400).json({ message: "Validation failed.", errors: error.errors });
     }
 
@@ -65,4 +66,4 @@ const handler = async (
   }
 };
 
-export default withValidation(loginSchema, handler);
+export default withCORS(withValidation(loginSchema, handler)); // Wrap with withCORS
