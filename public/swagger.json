@@ -5,12 +5,7 @@
     "version": "1.0.0",
     "description": "Backend API for the Help App platform, connecting clients with service providers."
   },
-  "servers": [
-    {
-      "url": "https://help-app-henna.vercel.app/",
-    "description": "Production server"
-    }
-  ],
+  
   "tags": [
     { "name": "User Management", "description": "User authentication and profile management" },
     { "name": "Services", "description": "Service types and offerings" },
