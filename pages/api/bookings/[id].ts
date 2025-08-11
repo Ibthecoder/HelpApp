@@ -1,14 +1,14 @@
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextApiResponse } from "next";
 import { withAuth, AuthenticatedRequest } from "@/middlewares/auth";
 import { withValidation } from "@/middlewares/validate";
-import { updateBookingStatusSchema } from "@/schemas/booking.schema";
+import { updateBookingStatusSchema, UpdateBookingStatusSchema } from "@/schemas/booking.schema";
 import { updateBookingStatus } from "@/services/booking.service";
 import { Role } from "@prisma/client";
 
 const handler = async (
   req: AuthenticatedRequest,
   res: NextApiResponse,
-  validatedData: any // Type inferred by withValidation
+  validatedData: UpdateBookingStatusSchema
 ) => {
   if (req.method === "PATCH") {
     try {
@@ -27,9 +27,9 @@ const handler = async (
         req.user.id // Pass provider ID for authorization check within service
       );
       return res.status(200).json(updatedBooking);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("API Error updating booking status:", error);
-      if (error.message.includes("Booking not found") || error.message.includes("Unauthorized") || error.message.includes("Invalid status transition")) {
+      if (error instanceof Error && (error.message.includes("Booking not found") || error.message.includes("Unauthorized") || error.message.includes("Invalid status transition"))) {
         return res.status(400).json({ message: error.message });
       }
       return res.status(500).json({ message: "Failed to update booking status." });

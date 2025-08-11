@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { getAllServices, createServiceType } from "@/services/service.service";
 import { withAuth } from "@/middlewares/auth";
 import { withValidation } from "@/middlewares/validate";
-import { createServiceTypeSchema } from "@/schemas/service.schema";
+import { createServiceTypeSchema, CreateServiceTypeSchema } from "@/schemas/service.schema";
 import { Role } from "@prisma/client";
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
@@ -10,7 +10,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     try {
       const services = await getAllServices();
       return res.status(200).json(services);
-    } catch (error) {
+    } catch (error: unknown) { // Changed to unknown
       console.error("API Error fetching services:", error);
       return res.status(500).json({ message: "Failed to fetch services." });
     }
@@ -27,13 +27,13 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 const createServiceTypeHandler = async (
   req: NextApiRequest,
   res: NextApiResponse,
-  validatedData: any // Type will be inferred by withValidation
+  validatedData: CreateServiceTypeSchema // Use the specific type
 ) => {
   try {
     const newServiceType = await createServiceType(validatedData);
     return res.status(201).json(newServiceType);
-  } catch (error: any) {
-    if (error.message.includes("Service type with name")) {
+  } catch (error: unknown) { // Changed to unknown
+    if (error instanceof Error && error.message.includes("Service type with name")) {
       return res.status(409).json({ message: error.message });
     }
     console.error("API Error creating service type:", error);
@@ -42,7 +42,7 @@ const createServiceTypeHandler = async (
 };
 
 // Apply middleware conditionally
-export default function (req: NextApiRequest, res: NextApiResponse) {
+function servicesApiHandler(req: NextApiRequest, res: NextApiResponse) { // Changed to named function
   if (req.method === "POST") {
     // Apply withAuth (Admin only) and withValidation for POST requests
     const authenticatedAndValidatedHandler = withAuth(
@@ -55,3 +55,5 @@ export default function (req: NextApiRequest, res: NextApiResponse) {
     return handler(req, res);
   }
 }
+
+export default servicesApiHandler; // Export the named function

@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { withAuth, AuthenticatedRequest } from "@/middlewares/auth";
 import { withValidation } from "@/middlewares/validate";
-import { createBookingSchema } from "@/schemas/booking.schema";
+import { createBookingSchema, CreateBookingSchema } from "@/schemas/booking.schema";
 import { createBooking, getBookingsForUser } from "@/services/booking.service";
 import { Role } from "@prisma/client";
 
@@ -16,7 +16,7 @@ const handler = async (req: AuthenticatedRequest, res: NextApiResponse) => {
       }
       const bookings = await getBookingsForUser(req.user.id);
       return res.status(200).json(bookings);
-    } catch (error) {
+    } catch (error: unknown) { // Change to unknown
       console.error("API Error fetching bookings:", error);
       return res.status(500).json({ message: "Failed to fetch bookings." });
     }
@@ -28,7 +28,7 @@ const handler = async (req: AuthenticatedRequest, res: NextApiResponse) => {
 const createBookingHandler = async (
   req: AuthenticatedRequest,
   res: NextApiResponse,
-  validatedData: any // Type inferred by withValidation
+  validatedData: CreateBookingSchema // Use the specific type
 ) => {
   try {
     if (!req.user || req.user.role !== Role.CLIENT) {
@@ -36,16 +36,17 @@ const createBookingHandler = async (
     }
     const newBooking = await createBooking(req.user.id, validatedData);
     return res.status(201).json(newBooking);
-  } catch (error: any) {
+  } catch (error: unknown) { // Change to unknown
     console.error("API Error creating booking:", error);
-    if (error.message.includes("Provider not found") || error.message.includes("Service not found") || error.message.includes("Service does not belong")) {
+    if (error instanceof Error && (error.message.includes("Provider not found") || error.message.includes("Service not found") || error.message.includes("Service does not belong"))) {
       return res.status(400).json({ message: error.message });
     }
     return res.status(500).json({ message: "Failed to create booking." });
   }
 };
 
-export default function (req: NextApiRequest, res: NextApiResponse) {
+// Change to a named function for default export
+function bookingsApiHandler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === "POST") {
     const authenticatedAndValidatedHandler = withAuth(
       withValidation(createBookingSchema, createBookingHandler),
@@ -59,3 +60,5 @@ export default function (req: NextApiRequest, res: NextApiResponse) {
     return handler(req, res);
   }
 }
+
+export default bookingsApiHandler; // Export the named function
