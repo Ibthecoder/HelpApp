@@ -14,12 +14,27 @@ const JWT_CONFIG = {
   expiresIn: process.env.JWT_EXPIRES_IN || "7d", // Default to 15 minutes if not set:.:
 
   // Secret key for signing tokens (MUST be in environment variables):.:
-  secret:
-    process.env.JWT_SECRET_KEY ||
-    (() => {
-      console.error(" JWT_SECRET environment variable is missing!");
-      throw new Error("JWT_SECRET is required for authentication");
-    })(),
+  const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY;
+if (!JWT_SECRET_KEY) {
+  console.error(" JWT_SECRET environment variable is missing!");
+  throw new Error("JWT_SECRET is required for authentication");
+}
+
+// i Define my JWT payload structure:.:
+export interface JwtPayload {
+  userId: string;
+  role: Role;
+  email: string;
+  iat?: number; // Issued at timestamp (added by jwt.sign):
+  exp?: number; // Expiration timestamp (added by jwt.sign):
+}
+
+//  JWT Configuration constants:
+const JWT_CONFIG = {
+  expiresIn: process.env.JWT_EXPIRES_IN || "7d", // Default to 15 minutes if not set:.:
+
+  // Secret key for signing tokens (MUST be in environment variables):.:
+  secret: JWT_SECRET_KEY,
 
   // Algorithm used for signing (HS256 is industry standard for symmetric keys)
   algorithm: "HS256" as const,
