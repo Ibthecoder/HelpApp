@@ -16,14 +16,23 @@ const JWT_CONFIG = {
 
   // Secret key for signing tokens (MUST be in environment variables):.:
   // Access process.env inside a function to bypass Turbopack parsing issue
-  secret: () => {
-    const secretKey = process.env.JWT_SECRET_KEY;
-    if (!secretKey) {
-      console.error(" JWT_SECRET environment variable is missing!");
-      throw new Error("JWT_SECRET is required for authentication");
-    }
-    return secretKey;
-  },
+  secret: process.env.JWT_SECRET_KEY as string,
+
+  // Algorithm used for signing (HS256 is industry standard for symmetric keys)
+  algorithm: "HS256" as const,
+
+  // Token issuer::
+  issuer: "helpapp-api",
+
+  // Token audience (who can use this token):.:
+  audience: "helpapp-users",
+};
+
+// Add a runtime check for the secret (still important for production)
+if (!JWT_CONFIG.secret) {
+  console.error(" JWT_SECRET environment variable is missing!");
+  throw new Error("JWT_SECRET is required for authentication");
+}
 
   // Algorithm used for signing (HS256 is industry standard for symmetric keys)
   algorithm: "HS256" as const,
