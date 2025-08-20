@@ -15,27 +15,15 @@ const JWT_CONFIG = {
   expiresIn: process.env.JWT_EXPIRES_IN || "7d", // Default to 15 minutes if not set:.:
 
   // Secret key for signing tokens (MUST be in environment variables):.:
-  const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY;
-if (!JWT_SECRET_KEY) {
-  console.error(" JWT_SECRET environment variable is missing!");
-  throw new Error("JWT_SECRET is required for authentication");
-}
-
-// i Define my JWT payload structure:.:
-export interface JwtPayload {
-  userId: string;
-  role: Role;
-  email: string;
-  iat?: number; // Issued at timestamp (added by jwt.sign):
-  exp?: number; // Expiration timestamp (added by jwt.sign):
-}
-
-//  JWT Configuration constants:
-const JWT_CONFIG = {
-  expiresIn: process.env.JWT_EXPIRES_IN || "7d", // Default to 15 minutes if not set:.:
-
-  // Secret key for signing tokens (MUST be in environment variables):.:
-  secret: JWT_SECRET_KEY,
+  // Access process.env inside a function to bypass Turbopack parsing issue
+  secret: () => {
+    const secretKey = process.env.JWT_SECRET_KEY;
+    if (!secretKey) {
+      console.error(" JWT_SECRET environment variable is missing!");
+      throw new Error("JWT_SECRET is required for authentication");
+    }
+    return secretKey;
+  },
 
   // Algorithm used for signing (HS256 is industry standard for symmetric keys)
   algorithm: "HS256" as const,
@@ -61,7 +49,8 @@ export function generateToken(user: {
 
   try {
     // i Create and sign the token::
-    const token = jwt.sign(payload, JWT_CONFIG.secret, {
+    // Call the secret function to get the secret
+    const token = jwt.sign(payload, JWT_CONFIG.secret(), {
       expiresIn: JWT_CONFIG.expiresIn,
       audience: JWT_CONFIG.audience,
       issuer: JWT_CONFIG.issuer,
@@ -82,7 +71,8 @@ export function verifyToken(token: string): JwtPayload {
     const cleanToken = token.startsWith("Bearer ") ? token.slice(7) : token;
 
     // Verify and decode the token:.:
-    const decoded = jwt.verify(cleanToken, JWT_CONFIG.secret, {
+    // Call the secret function to get the secret
+    const decoded = jwt.verify(cleanToken, JWT_CONFIG.secret(), {
       algorithms: [JWT_CONFIG.algorithm], // Only accept our algorithm::
       issuer: JWT_CONFIG.issuer, // Must be from our app
       audience: JWT_CONFIG.audience, // Must be for our users
