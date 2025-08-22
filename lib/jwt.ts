@@ -10,12 +10,19 @@ export interface JwtPayload {
   exp?: number; // Expiration timestamp (added by jwt.sign)
 }
 
+// Helper function to get JWT secret safely
+function getJWTSecret(): string {
+  const secret = process.env.JWT_SECRET_KEY;
+  if (!secret) {
+    console.error("JWT_SECRET_KEY environment variable is missing!");
+    throw new Error("JWT_SECRET_KEY is required for authentication");
+  }
+  return secret;
+}
+
 // JWT Configuration constants
 const JWT_CONFIG = {
   expiresIn: process.env.JWT_EXPIRES_IN || "7d", // Default to 7 days if not set
-
-  // Secret key for signing tokens (MUST be in environment variables)
-  secret: process.env.JWT_SECRET_KEY as string,
 
   // Algorithm used for signing (HS256 is industry standard for symmetric keys)
   algorithm: "HS256" as const,
@@ -26,12 +33,6 @@ const JWT_CONFIG = {
   // Token audience (who can use this token)
   audience: "helpapp-users",
 };
-
-// Add a runtime check for the secret (still important for production)
-if (!JWT_CONFIG.secret) {
-  console.error("JWT_SECRET environment variable is missing!");
-  throw new Error("JWT_SECRET is required for authentication");
-}
 
 // This function creates a signed JWT token when users login
 export function generateToken(user: {
@@ -47,7 +48,7 @@ export function generateToken(user: {
 
   try {
     // Create and sign the token
-    const token = jwt.sign(payload, JWT_CONFIG.secret, {
+    const token = jwt.sign(payload, getJWTSecret(), {
       expiresIn: JWT_CONFIG.expiresIn,
       audience: JWT_CONFIG.audience,
       issuer: JWT_CONFIG.issuer,
@@ -68,7 +69,7 @@ export function verifyToken(token: string): JwtPayload {
     const cleanToken = token.startsWith("Bearer ") ? token.slice(7) : token;
 
     // Verify and decode the token
-    const decoded = jwt.verify(cleanToken, JWT_CONFIG.secret, {
+    const decoded = jwt.verify(cleanToken, getJWTSecret(), {
       algorithms: [JWT_CONFIG.algorithm], // Only accept our algorithm
       issuer: JWT_CONFIG.issuer, // Must be from our app
       audience: JWT_CONFIG.audience, // Must be for our users
@@ -172,7 +173,6 @@ export function refreshToken(currentToken: string): string {
     throw new Error("Cannot refresh invalid token");
   }
 }
-
 // import jwt from "jsonwebtoken";
 // import { Role } from "@prisma/client";
 
