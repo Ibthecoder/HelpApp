@@ -1,4 +1,4 @@
-import jwt from "jsonwebtoken";
+import jwt, { SignOptions, VerifyOptions } from "jsonwebtoken";
 import { Role } from "@prisma/client";
 
 // Define JWT payload structure
@@ -53,7 +53,7 @@ export function generateToken(user: {
       audience: JWT_CONFIG.audience,
       issuer: JWT_CONFIG.issuer,
       algorithm: JWT_CONFIG.algorithm,
-    });
+    } as SignOptions);
     console.log("Token generated successfully");
     return token;
   } catch (error) {
@@ -73,7 +73,7 @@ export function verifyToken(token: string): JwtPayload {
       algorithms: [JWT_CONFIG.algorithm], // Only accept our algorithm
       issuer: JWT_CONFIG.issuer, // Must be from our app
       audience: JWT_CONFIG.audience, // Must be for our users
-    }) as JwtPayload;
+    } as VerifyOptions) as JwtPayload;
     console.log(
       "Token verified successfully for the user:",
       `${decoded.email}`
@@ -173,6 +173,7 @@ export function refreshToken(currentToken: string): string {
     throw new Error("Cannot refresh invalid token");
   }
 }
+
 // import jwt from "jsonwebtoken";
 // import { Role } from "@prisma/client";
 
