@@ -10,19 +10,19 @@ export interface JwtPayload {
   exp?: number; // Expiration timestamp (added by jwt.sign)
 }
 
-// Ensure JWT_SECRET_KEY is defined at the very top and is a string
-const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY;
-if (!JWT_SECRET_KEY) {
-  console.error("JWT_SECRET_KEY environment variable is missing!");
-  throw new Error("JWT_SECRET_KEY is required for authentication");
+// Helper function to get JWT secret safely
+function getJWTSecret(): string {
+  const secret = process.env.JWT_SECRET_KEY;
+  if (!secret) {
+    console.error("JWT_SECRET_KEY environment variable is missing!");
+    throw new Error("JWT_SECRET_KEY is required for authentication");
+  }
+  return secret;
 }
 
 // JWT Configuration constants
 const JWT_CONFIG = {
-  expiresIn: process.env.JWT_EXPIRES_IN || "7d", // Default to 7 days if not set
-
-  // Secret key for signing tokens (MUST be in environment variables)
-  secret: JWT_SECRET_KEY, // Now guaranteed to be a string
+  expiresIn: (process.env.JWT_EXPIRES_IN || "7d") as string, // Default to 7 days if not set
 
   // Algorithm used for signing (HS256 is industry standard for symmetric keys)
   algorithm: "HS256" as const,
@@ -48,12 +48,14 @@ export function generateToken(user: {
 
   try {
     // Create and sign the token
-    const token = jwt.sign(payload, JWT_CONFIG.secret, { // Use JWT_CONFIG.secret directly
+    const signOptions: SignOptions = {
       expiresIn: JWT_CONFIG.expiresIn,
       audience: JWT_CONFIG.audience,
       issuer: JWT_CONFIG.issuer,
       algorithm: JWT_CONFIG.algorithm,
-    } as SignOptions);
+    };
+
+    const token = jwt.sign(payload, getJWTSecret(), signOptions);
     console.log("Token generated successfully");
     return token;
   } catch (error) {
@@ -69,11 +71,17 @@ export function verifyToken(token: string): JwtPayload {
     const cleanToken = token.startsWith("Bearer ") ? token.slice(7) : token;
 
     // Verify and decode the token
-    const decoded = jwt.verify(cleanToken, JWT_CONFIG.secret, { // Use JWT_CONFIG.secret directly
+    const verifyOptions: VerifyOptions = {
       algorithms: [JWT_CONFIG.algorithm], // Only accept our algorithm
       issuer: JWT_CONFIG.issuer, // Must be from our app
       audience: JWT_CONFIG.audience, // Must be for our users
-    } as VerifyOptions) as JwtPayload;
+    };
+
+    const decoded = jwt.verify(
+      cleanToken,
+      getJWTSecret(),
+      verifyOptions
+    ) as JwtPayload;
     console.log(
       "Token verified successfully for the user:",
       `${decoded.email}`
