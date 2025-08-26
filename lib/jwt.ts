@@ -1,4 +1,4 @@
-import jwt, { SignOptions, VerifyOptions } from "jsonwebtoken";
+import * as jwt from "jsonwebtoken";
 import { Role } from "@prisma/client";
 
 // Define JWT payload structure
@@ -22,17 +22,11 @@ function getJWTSecret(): string {
 
 // JWT Configuration constants
 const JWT_CONFIG = {
-  expiresIn: (process.env.JWT_EXPIRES_IN || "7d") as string, // Default to 7 days if not set
-
-  // Algorithm used for signing (HS256 is industry standard for symmetric keys)
-  algorithm: "HS256" as const,
-
-  // Token issuer
+  expiresIn: "7d",
+  algorithm: "HS256",
   issuer: "helpapp-api",
-
-  // Token audience (who can use this token)
   audience: "helpapp-users",
-};
+} as const;
 
 // This function creates a signed JWT token when users login
 export function generateToken(user: {
@@ -48,14 +42,12 @@ export function generateToken(user: {
 
   try {
     // Create and sign the token
-    const signOptions: SignOptions = {
-      expiresIn: JWT_CONFIG.expiresIn,
+    const token = jwt.sign(payload, getJWTSecret(), {
+      expiresIn: process.env.JWT_EXPIRES_IN || JWT_CONFIG.expiresIn,
       audience: JWT_CONFIG.audience,
       issuer: JWT_CONFIG.issuer,
       algorithm: JWT_CONFIG.algorithm,
-    };
-
-    const token = jwt.sign(payload, getJWTSecret(), signOptions);
+    });
     console.log("Token generated successfully");
     return token;
   } catch (error) {
@@ -71,22 +63,17 @@ export function verifyToken(token: string): JwtPayload {
     const cleanToken = token.startsWith("Bearer ") ? token.slice(7) : token;
 
     // Verify and decode the token
-    const verifyOptions: VerifyOptions = {
-      algorithms: [JWT_CONFIG.algorithm], // Only accept our algorithm
+    const decoded = jwt.verify(cleanToken, getJWTSecret(), {
+      algorithms: ["HS256"], // Only accept our algorithm
       issuer: JWT_CONFIG.issuer, // Must be from our app
       audience: JWT_CONFIG.audience, // Must be for our users
-    };
+    });
 
-    const decoded = jwt.verify(
-      cleanToken,
-      getJWTSecret(),
-      verifyOptions
-    ) as JwtPayload;
     console.log(
       "Token verified successfully for the user:",
-      `${decoded.email}`
+      `${(decoded as JwtPayload).email}`
     );
-    return decoded;
+    return decoded as JwtPayload;
   } catch (error) {
     // Handle different types of JWT errors with specific messages
     if (error instanceof jwt.TokenExpiredError) {
