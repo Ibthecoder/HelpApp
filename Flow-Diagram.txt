@@ -1,0 +1,46 @@
+Client (Frontend / Swagger / Postman)
+          │
+          ▼
+ ┌───────────────────────┐
+ │  pages/api/           │  <-- API route (entry point)
+ │  (e.g., signup.ts)    │
+ └───────────────────────┘
+          │
+          ▼
+ ┌───────────────────────┐
+ │  middlewares/         │  <-- Authentication & Validation
+ │  - auth.ts (JWT)      │
+ │  - validate.ts (Zod)  │
+ └───────────────────────┘
+          │
+          ▼
+ ┌───────────────────────┐
+ │  schemas/             │  <-- Request/Response validation
+ │  (Zod schemas)        │
+ └───────────────────────┘
+          │
+          ▼
+ ┌───────────────────────┐
+ │  services/            │  <-- Business logic layer
+ │  - auth.service.ts    │
+ │  - booking.service.ts │
+ │  - service.service.ts │
+ │  - review.service.ts  │
+ └───────────────────────┘
+          │
+          ▼
+ ┌───────────────────────┐
+ │  lib/prisma.ts        │  <-- Prisma Client (DB access)
+ │  lib/jwt.ts           │  <-- JWT helpers
+ │  lib/logger.ts        │  <-- Logging
+ └───────────────────────┘
+          │
+          ▼
+ ┌───────────────────────┐
+ │  PostgreSQL Database  │
+ │  (schema.prisma → DB) │
+ └───────────────────────┘
+
+
+Why I use  Railway:
+I used Railway (managed Postgres) for this project because it provides a quick, production-ready PostgreSQL database with an easy connection string, making it simple to integrate with Vercel deployment.

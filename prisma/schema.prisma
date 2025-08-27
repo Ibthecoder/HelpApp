@@ -1,0 +1,96 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+//Want to Create db for the user first:
+model User{
+  id        String   @id @default(cuid())    //unique id:
+  email     String   @unique
+  password  String
+  name      String 
+  role      Role     @default(CLIENT) //CLIENT | PROVIDER | ADMIN
+  bookingsAsClient   Booking[] @relation("ClientBookings")  //if  user is a client:
+  bookingsAsProvider  Booking[] @relation("ProviderBookings") //if user is a provider:
+  servicesProvided    Service[] @relation("ProviderServices")
+  reviews            Review[] //review written by client
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+//ServiceType -> Admin creates it:
+model ServiceType{
+  id    String   @id @default(cuid())
+  name  String   @unique
+  description  String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  services  Service[]
+}
+
+// for the service :
+model Service {
+  id          String @id @default(cuid())
+  title       String
+  description String
+  price       Float
+  provider    User  @relation("ProviderServices", fields:[providerId], references:[id])
+  providerId  String
+  serviceType   ServiceType @relation(fields: [serviceTypeId], references: [id])
+  serviceTypeId String
+  bookings    Booking[]
+  createdAt   DateTime  @default(now())  
+  updatedAt   DateTime  @updatedAt 
+}
+
+
+
+model Booking{
+  id          String    @id @default(cuid())
+  client      User      @relation("ClientBookings", fields: [clientId] , references: [id])
+  clientId    String
+  provider    User       @relation("ProviderBookings", fields: [providerId], references: [id])
+  providerId  String
+  service     Service     @relation(fields: [serviceId], references:[id]) 
+  serviceId   String 
+  status      BookingStatus @default(PENDING)
+  review      Review?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+// for the review 
+model Review{
+  id         String   @id @default(cuid())
+  rating     Int
+  comment    String?
+  booking    Booking  @relation(fields: [bookingId], references: [id])
+  bookingId  String   @unique
+  author     User     @relation(fields: [authorId], references: [id])
+  authorId   String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+enum Role{
+  CLIENT
+  PROVIDER
+  ADMIN
+}
+
+enum BookingStatus{
+  PENDING
+  ACCEPTED
+  REJECTED
+  COMPLETED
+}
