@@ -1,41 +1,22 @@
-import { NextApiRequest, NextApiResponse } from "next";
-import {
-  verifyToken,
-  extractTokenFromHeader,
-  JwtPayload,
-} from "../../../lib/jwt";
-// Import the Prisma client to find the user in the database::.
-import prisma from "../../../lib/prisma";
+import { NextApiResponse } from "next";
+import { withAuth, AuthenticatedRequest } from "@/middlewares/auth";
+import prisma from "@/lib/prisma";
 
 //This is a protected route that requires a valid JWT in the Authorization header::
 //It verifies the token, finds the user in the database, and returns their profile::.
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
+const handler = async (req: AuthenticatedRequest, res: NextApiResponse) => {
   // Only allow GET requests::.
   if (req.method !== "GET") {
     return res.status(405).json({ message: "Method Not Allowed" });
   }
 
-  // Get the Authorization header from the request::.
-  const authHeader = req.headers.authorization;
-
-  // Extract the token from the header::.
-  const token = extractTokenFromHeader(authHeader || null);
-
-  // If no token is provided, return a 401 Unauthorized error::.
-  if (!token) {
-    return res.status(401).json({ message: "Authorization token is missing." });
-  }
-
   try {
-    // Verify the token. This will throw an error if the token is invalid or expired::.
-    const payload = verifyToken(token) as JwtPayload;
-
+    if (!req.user) {
+      return res.status(401).json({ message: "Authentication token missing" });
+    }
     // Use the user ID from the token payload to find the user in the database::.
     const user = await prisma.user.findUnique({
-      where: { id: payload.userId },
+      where: { id: req.user.id },
       // Select the fields you want to return::.
       // Not returning the  password field here::.
       select: {
@@ -54,12 +35,15 @@ export default async function handler(
 
     // Return the user's profile::.
     return res.status(200).json(user);
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Handle specific JWT verification errors::.
-    console.error("Authentication Error:", error.message);
+    const message = error instanceof Error ? error.message : "Authentication failed.";
+    console.error("Authentication Error:", message);
     // Return 401 Unauthorized for all JWT-related failures::.
     return res
       .status(401)
-      .json({ message: error.message || "Authentication failed." });
+      .json({ message });
   }
-}
+};
+
+export default withAuth(handler);

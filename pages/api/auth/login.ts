@@ -1,23 +1,21 @@
 import { NextApiRequest, NextApiResponse } from "next";
-// Import the authentication service and JWT utility functions.
 import { loginUser } from "@/services/auth.service";
 import { generateToken } from "@/lib/jwt";
-import { loginSchema } from "@/schemas/auth.schema";
+import { loginSchema, LoginSchema } from "@/schemas/auth.schema";
+import { withValidation } from "@/middlewares/validate";
 
 //Handles the POST /api/login endpoint for user authenticatio:.:
 //If successful, it generates and returns a JWT:.:
-export default async function handler(
+const handler = async (
   req: NextApiRequest,
-  res: NextApiResponse
-) {
+  res: NextApiResponse,
+  validatedData: LoginSchema
+) => {
   if (req.method !== "POST") {
     return res.status(405).json({ message: "Method Not Allowed" });
   }
 
   try {
-    // Validate the request body with the login schema::.
-    const validatedData = loginSchema.parse(req.body);
-
     // Call the service to handle the login logic (finding user and comparing passwords)::.
     const user = await loginUser(validatedData);
 
@@ -40,17 +38,9 @@ export default async function handler(
         role: user.role,
       },
     });
-  } catch (error: any) {
-    // Handle validation errors::.
-    if (error.name === "ZodError") {
-      return res.status(400).json({
-        message: "Validation failed",
-        errors: error.errors,
-      });
-    }
-
+  } catch (error: unknown) {
     // Handle authentication errors from the service layer::.
-    if (error.message.includes("Invalid email or password")) {
+    if (error instanceof Error && error.message.includes("Invalid email or password")) {
       return res.status(401).json({ message: error.message });
     }
 
@@ -60,4 +50,6 @@ export default async function handler(
       .status(500)
       .json({ message: "An unexpected error occurred during login." });
   }
-}
+};
+
+export default withValidation(loginSchema, handler);

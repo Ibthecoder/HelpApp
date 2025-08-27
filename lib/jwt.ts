@@ -45,16 +45,12 @@ export function generateToken(user: {
 
   try {
     // i Create and sign the token::
-    const token = jwt.sign(
-      {
-        ...payload,
-        exp: JWT_CONFIG.expiresIn,
-        aud: JWT_CONFIG.audience,
-        issuer: JWT_CONFIG.issuer,
-        algorithm: JWT_CONFIG.algorithm,
-      }, // What data to include in the token:.:
-      JWT_CONFIG.secret as jwt.Secret // Secret key for signing:.:
-    );
+    const token = jwt.sign(payload, JWT_CONFIG.secret, {
+      expiresIn: JWT_CONFIG.expiresIn,
+      audience: JWT_CONFIG.audience,
+      issuer: JWT_CONFIG.issuer,
+      algorithm: JWT_CONFIG.algorithm,
+    });
     console.log(" Token generated successfully");
     return token;
   } catch (error) {
@@ -153,21 +149,7 @@ export function isTokenExpired(token: string): boolean {
   }
 }
 
-//i want to Extract Token from Request Headers (Utility Function):.:
-export function extractTokenFromHeader(
-  authorizationHeader: string | null
-): string | null {
-  if (!authorizationHeader) {
-    return null;
-  }
 
-  // Handle "Bearer <token>" format:.:
-  if (authorizationHeader.startsWith("Bearer")) {
-    return authorizationHeader.slice(7);
-  }
-  //Handle direct token format:.:
-  return authorizationHeader;
-}
 
 // i want to Refresh Token Utility:.:
 // Generate a new token with extended expiration for existing valid token:.:
@@ -209,7 +191,7 @@ export function refreshToken(currentToken: string): string {
  *
  * // Protected endpoint
  * --const authHeader = request.headers.get('authorization')
- * --const token = extractTokenFromHeader(authHeader)
+ 
  * --const payload = verifyToken(token)
  *
  * // Check expiration
