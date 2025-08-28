@@ -41,13 +41,11 @@ export function generateToken(user: {
   };
 
   try {
-    // Create and sign the token
-    const token = jwt.sign(payload, getJWTSecret(), {
-      expiresIn: process.env.JWT_EXPIRES_IN || JWT_CONFIG.expiresIn,
-      audience: JWT_CONFIG.audience,
-      issuer: JWT_CONFIG.issuer,
-      algorithm: JWT_CONFIG.algorithm,
-    });
+    // Get the secret key
+    const secret = getJWTSecret();
+    
+    // Create and sign the token without options first
+    const token = jwt.sign(payload, secret);
     console.log("Token generated successfully");
     return token;
   } catch (error) {
@@ -62,13 +60,12 @@ export function verifyToken(token: string): JwtPayload {
     // Remove 'Bearer ' prefix if present (common in Authorization headers)
     const cleanToken = token.startsWith("Bearer ") ? token.slice(7) : token;
 
+    // Get the secret key
+    const secret = getJWTSecret();
+    
     // Verify and decode the token
-    const decoded = jwt.verify(cleanToken, getJWTSecret(), {
-      algorithms: ["HS256"], // Only accept our algorithm
-      issuer: JWT_CONFIG.issuer, // Must be from our app
-      audience: JWT_CONFIG.audience, // Must be for our users
-    });
-
+    const decoded = jwt.verify(cleanToken, secret);
+    
     console.log(
       "Token verified successfully for the user:",
       `${(decoded as JwtPayload).email}`
