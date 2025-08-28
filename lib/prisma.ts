@@ -39,19 +39,19 @@ const prisma = globalThis._prisma ?? createPrismaClient(); // using singleton he
 if (process.env.NODE_ENV === "development") {
   //Development: Store connection globally so hot reloads can reuse it:.:
   globalThis._prisma = prisma;
-  console.log("💾 Prisma client stored globally for development reuse");
+  console.log(" Prisma client stored globally for development reuse");
 } else {
   //Production: DON'T store globally (fresh connections prevent memory leaks):.:
-  console.log("🚀 Production: Using fresh Prisma client instance");
+  console.log(" Production: Using fresh Prisma client instance");
 }
 
 //Step 5 i want to clean up database connections when the app shuts down becuase of memory leaks:.:
 async function disconnectPrisma() {
   try {
     await prisma.$disconnect();
-    console.log("❌ Prisma client disconnected successfully");
+    console.log(" Prisma client disconnected successfully");
   } catch (error) {
-    console.log("⚠️ Error disconnecting Prisma client:", error);
+    console.log(" Error disconnecting Prisma client:", error);
     // Exit with error code to signal something went wrong:.:
     process.exit(1); // Exit with failure code:.:
   }
